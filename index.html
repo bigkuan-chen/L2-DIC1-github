@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuan Chen - Interactive Greeting</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0a0b10;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-1: #818cf8; /* Indigo */
+            --accent-2: #c084fc; /* Purple */
+            --accent-3: #2dd4bf; /* Teal */
+            --glow-color: rgba(129, 140, 248, 0.15);
+            --font-main: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --card-bg: rgba(0, 0, 0, 0.02);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent-1: #4f46e5;
+            --accent-2: #9333ea;
+            --accent-3: #0d9488;
+            --glow-color: rgba(79, 70, 229, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Animated Background Gradients */
+        .ambient-glows {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            mix-blend-mode: screen;
+            animation: float 25s infinite alternate ease-in-out;
+        }
+
+        [data-theme="light"] .glow-orb {
+            opacity: 0.15;
+            mix-blend-mode: multiply;
+            filter: blur(120px);
+        }
+
+        .glow-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--accent-1) 0%, rgba(0,0,0,0) 70%);
+            top: -10%;
+            left: -10%;
+            animation-delay: 0s;
+        }
+
+        .glow-2 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-2) 0%, rgba(0,0,0,0) 70%);
+            bottom: -15%;
+            right: -10%;
+            animation-delay: -5s;
+        }
+
+        .glow-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--accent-3) 0%, rgba(0,0,0,0) 70%);
+            top: 40%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+                transform: translate(-20px, 20px) scale(0.95);
+            }
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        /* Interactive Grid Overlay */
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center center;
+            mask-image: radial-gradient(circle, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle, black 40%, transparent 80%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        [data-theme="light"] .grid-overlay {
+            background-image: 
+                linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+        }
+
+        /* Main Container Card */
+        .card {
+            position: relative;
+            z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            width: 90%;
+            max-width: 580px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transform: translateY(0);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        box-shadow 0.4s ease, 
+                        border-color 0.4s ease;
+        }
+
+        [data-theme="light"] .card {
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 30px 60px var(--glow-color),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        [data-theme="light"] .card:hover {
+            box-shadow: 0 30px 60px var(--glow-color),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.12);
+        }
+
+        /* Badge/Introduction Header */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(129, 140, 248, 0.08);
+            border: 1px solid rgba(129, 140, 248, 0.15);
+            border-radius: 9999px;
+            color: var(--accent-1);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 2rem;
+            animation: pulse-border 3s infinite;
+        }
+
+        [data-theme="light"] .badge {
+            background: rgba(79, 70, 229, 0.05);
+            border-color: rgba(79, 70, 229, 0.12);
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(129, 140, 248, 0.15); }
+            50% { border-color: rgba(192, 132, 252, 0.4); }
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--accent-1);
+            display: inline-block;
+            box-shadow: 0 0 8px var(--accent-1);
+        }
+
+        /* Main Greeting Typography */
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+
+        .greet-text {
+            display: block;
+            font-weight: 400;
+            font-size: 1.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .name-highlight {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2) 60%, var(--accent-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Time & Date Display Section */
+        .time-container {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .time-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .clock-display {
+            font-family: var(--font-mono);
+            font-size: 2.25rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            align-items: baseline;
+        }
+
+        .clock-unit {
+            display: inline-block;
+            min-width: 1.4em;
+            text-align: center;
+        }
+
+        .clock-sep {
+            animation: blink 1s step-end infinite;
+            color: var(--accent-1);
+            opacity: 0.8;
+            padding: 0 2px;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.2; }
+        }
+
+        .clock-period {
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--accent-2);
+            margin-left: 0.5rem;
+            align-self: center;
+        }
+
+        .date-display {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-top: 0.25rem;
+        }
+
+        /* Controls: Theme Switcher */
+        .controls {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            z-index: 100;
+            display: flex;
+            gap: 12px;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+            outline: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-1);
+            transform: scale(1.05);
+        }
+
+        [data-theme="light"] .theme-toggle:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sun-icon {
+            display: none;
+        }
+
+        [data-theme="light"] .sun-icon {
+            display: block;
+        }
+
+        [data-theme="light"] .moon-icon {
+            display: none;
+        }
+
+        /* Footer info */
+        .footer-info {
+            position: absolute;
+            bottom: 24px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            opacity: 0.6;
+            z-index: 10;
+            letter-spacing: 0.05em;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            .greet-text {
+                font-size: 1.4rem;
+            }
+            .clock-display {
+                font-size: 1.85rem;
+            }
+            .card {
+                padding: 2.5rem 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="theme-toggle" id="theme-toggle" title="Toggle Theme" aria-label="Toggle dark/light theme">
+            <!-- Moon Icon (Default Dark) -->
+            <svg class="moon-icon" viewBox="0 0 24 24">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <!-- Sun Icon -->
+            <svg class="sun-icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="4.22" x2="19.78" y2="5.64"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Background Orbs -->
+    <div class="ambient-glows">
+        <div class="glow-orb glow-1"></div>
+        <div class="glow-orb glow-2"></div>
+        <div class="glow-orb glow-3"></div>
+    </div>
+    
+    <!-- Grid Overlay -->
+    <div class="grid-overlay"></div>
+
+    <!-- Main Content Card -->
+    <main class="card">
+        <div class="badge">
+            <span class="badge-dot"></span>
+            Personal Profile Page
+        </div>
+        
+        <h1>
+            <span class="greet-text">Hello, my name is</span>
+            <span class="name-highlight">Kuan Chen</span>
+        </h1>
+
+        <!-- Time & Date -->
+        <div class="time-container">
+            <div class="time-label">Current Date & Time</div>
+            
+            <div class="clock-display">
+                <span class="clock-unit" id="hours">00</span>
+                <span class="clock-sep">:</span>
+                <span class="clock-unit" id="minutes">00</span>
+                <span class="clock-sep">:</span>
+                <span class="clock-unit" id="seconds">00</span>
+                <span class="clock-period" id="period">PM</span>
+            </div>
+
+            <div class="date-display" id="date-display">
+                Loading date...
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer-info">
+        Designed with HTML, CSS & JavaScript
+    </footer>
+
+    <!-- Clock and Theme Switcher Logic -->
+    <script>
+        // DOM Elements
+        const hoursEl = document.getElementById('hours');
+        const minutesEl = document.getElementById('minutes');
+        const secondsEl = document.getElementById('seconds');
+        const periodEl = document.getElementById('period');
+        const dateEl = document.getElementById('date-display');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        // Clock Update Function
+        function updateClock() {
+            const now = new Date();
+            
+            // Time calculations
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            // Format 12-hour clock
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const hoursStr = String(hours).padStart(2, '0');
+
+            // Set content
+            hoursEl.textContent = hoursStr;
+            minutesEl.textContent = minutes;
+            secondsEl.textContent = seconds;
+            periodEl.textContent = ampm;
+
+            // Date formatting
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateEl.textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Live Clock ticking
+        setInterval(updateClock, 1000);
+        updateClock(); // Run immediately
+
+        // Card Interactive Mouse Effect
+        const card = document.querySelector('.card');
+        document.addEventListener('mousemove', (e) => {
+            if (!card) return;
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width/2;
+            const y = e.clientY - rect.top - rect.height/2;
+            
+            // Scale factors for tilt
+            const tiltX = (y / (rect.height/2)) * -6; // max 6 degrees
+            const tiltY = (x / (rect.width/2)) * 6; // max 6 degrees
+            
+            card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-6px)`;
+        });
+
+        document.addEventListener('mouseleave', () => {
+            if (!card) return;
+            card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)';
+        });
+
+        // Theme Toggle Support
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const activeTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = activeTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
+</body>
+</html>
