@@ -2,6 +2,8 @@
 
 A sleek, modern, and highly interactive personal greeting page built with vanilla web technologies. Featuring a responsive glassmorphic card, live clock display, smooth dark/light mode transition, and responsive layout.
 
+**Live Demo**: [https://bigkuan-chen.github.io/L2-DIC1-github/](https://bigkuan-chen.github.io/L2-DIC1-github/)
+
 ## ✨ Features
 
 - **Dynamic Interactive Card**: Features a premium 3D tilt/parallax hover effect responsive to mouse cursor coordinates.
